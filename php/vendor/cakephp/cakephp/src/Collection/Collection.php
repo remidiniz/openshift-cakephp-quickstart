@@ -15,11 +15,10 @@
 namespace Cake\Collection;
 
 use ArrayIterator;
-use Cake\Collection\CollectionInterface;
-use Cake\Collection\CollectionTrait;
 use InvalidArgumentException;
 use IteratorIterator;
 use Serializable;
+use Traversable;
 
 /**
  * A collection is an immutable list of elements with a handful of functions to
@@ -42,7 +41,7 @@ class Collection extends IteratorIterator implements CollectionInterface, Serial
             $items = new ArrayIterator($items);
         }
 
-        if (!($items instanceof \Traversable)) {
+        if (!($items instanceof Traversable)) {
             $msg = 'Only an array or \Traversable is allowed for Collection';
             throw new InvalidArgumentException($msg);
         }

@@ -14,10 +14,9 @@
  */
 namespace Cake\Datasource;
 
+use BadMethodCallException;
 use Cake\Collection\Iterator\MapReduce;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Datasource\QueryCacher;
-use Cake\Datasource\RepositoryInterface;
 
 /**
  * Contains the characteristics for an object that is attached to a repository and
@@ -394,7 +393,7 @@ trait QueryTrait
             $results = $this->all();
             return call_user_func_array([$results, $method], $arguments);
         }
-        throw new \BadMethodCallException(
+        throw new BadMethodCallException(
             sprintf('Unknown method "%s"', $method)
         );
     }

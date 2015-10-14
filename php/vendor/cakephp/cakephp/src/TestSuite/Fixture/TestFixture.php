@@ -13,18 +13,20 @@
  */
 namespace Cake\TestSuite\Fixture;
 
-use Cake\Core\Exception\Exception;
-use Cake\Database\Connection;
+use Cake\Core\Exception\Exception as CakeException;
 use Cake\Database\Schema\Table;
+use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\FixtureInterface;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
+use Exception;
 
 /**
  * Cake TestFixture is responsible for building and destroying tables to be used
  * during testing.
  */
-class TestFixture
+class TestFixture implements FixtureInterface
 {
 
     /**
@@ -40,13 +42,6 @@ class TestFixture
      * @var string
      */
     public $table = null;
-
-    /**
-     * List of datasources where this fixture has been created
-     *
-     * @var array
-     */
-    public $created = [];
 
     /**
      * Fields / Schema for the fixture.
@@ -99,10 +94,26 @@ class TestFixture
                     $connection,
                     $this->name
                 );
-                throw new Exception($message);
+                throw new CakeException($message);
             }
         }
         $this->init();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function connection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function sourceName()
+    {
+        return $this->table;
     }
 
     /**
@@ -178,7 +189,7 @@ class TestFixture
         );
 
         if (empty($import['table'])) {
-            throw new Exception('Cannot import from undefined table.');
+            throw new CakeException('Cannot import from undefined table.');
         } else {
             $this->table = $import['table'];
         }
@@ -205,12 +216,9 @@ class TestFixture
     }
 
     /**
-     * Run before all tests execute, should return SQL statement to create table for this fixture could be executed successfully.
-     *
-     * @param Connection $db An instance of the database object used to create the fixture table
-     * @return bool True on success, false on failure
+     * {@inheritDoc}
      */
-    public function create(Connection $db)
+    public function create(ConnectionInterface $db)
     {
         if (empty($this->_schema)) {
             return false;
@@ -222,7 +230,7 @@ class TestFixture
                 $db->execute($query)->closeCursor();
             }
             $this->created[] = $db->configName();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $msg = sprintf(
                 'Fixture creation for "%s" failed "%s"',
                 $this->table,
@@ -236,12 +244,9 @@ class TestFixture
     }
 
     /**
-     * Run after all tests executed, should return SQL statement to drop table for this fixture.
-     *
-     * @param Connection $db An instance of the database object used to create the fixture table
-     * @return bool True on success, false on failure
+     * {@inheritDoc}
      */
-    public function drop(Connection $db)
+    public function drop(ConnectionInterface $db)
     {
         if (empty($this->_schema)) {
             return false;
@@ -251,21 +256,16 @@ class TestFixture
             foreach ($sql as $stmt) {
                 $db->execute($stmt)->closeCursor();
             }
-            $this->created = array_diff($this->created, [$db->configName()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
         return true;
     }
 
     /**
-     * Run before each tests is executed, should return a set of SQL statements to insert records for the table
-     * of this fixture could be executed successfully.
-     *
-     * @param Connection $db An instance of the database into which the records will be inserted
-     * @return bool on success or if there are no records to insert, or false on failure
+     * {@inheritDoc}
      */
-    public function insert(Connection $db)
+    public function insert(ConnectionInterface $db)
     {
         if (isset($this->records) && !empty($this->records)) {
             list($fields, $values, $types) = $this->_getRecords();
@@ -308,13 +308,9 @@ class TestFixture
     }
 
     /**
-     * Truncates the current fixture. Can be overwritten by classes extending
-     * CakeFixture to trigger other events before / after truncate.
-     *
-     * @param Connection $db A reference to a db instance
-     * @return bool
+     * {@inheritDoc}
      */
-    public function truncate(Connection $db)
+    public function truncate(ConnectionInterface $db)
     {
         $sql = $this->_schema->truncateSql($db);
         foreach ($sql as $stmt) {

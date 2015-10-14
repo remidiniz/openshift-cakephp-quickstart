@@ -14,13 +14,11 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\Exception;
 use Cake\Database\Expression\OrderByExpression;
 use Cake\Database\Expression\OrderClauseExpression;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Database\Expression\ValuesExpression;
 use Cake\Database\Statement\CallbackStatement;
-use Cake\Database\ValueBinder;
 use IteratorAggregate;
 use RuntimeException;
 
@@ -38,7 +36,7 @@ class Query implements ExpressionInterface, IteratorAggregate
     /**
      * Connection instance to be used to execute this query.
      *
-     * @var \Cake\Database\Connection
+     * @var \Cake\Datasource\ConnectionInterface
      */
     protected $_connection;
 
@@ -126,7 +124,7 @@ class Query implements ExpressionInterface, IteratorAggregate
     /**
      * Constructor.
      *
-     * @param \Cake\Database\Connection $connection The connection
+     * @param \Cake\Datasource\ConnectionInterface $connection The connection
      * object to be used for transforming and executing this query
      */
     public function __construct($connection)
@@ -138,8 +136,8 @@ class Query implements ExpressionInterface, IteratorAggregate
      * Sets the connection instance to be used for executing and transforming this query
      * When called with a null argument, it will return the current connection instance.
      *
-     * @param \Cake\Database\Connection $connection instance
-     * @return $this|\Cake\Database\Connection
+     * @param \Cake\Datasource\ConnectionInterface $connection instance
+     * @return $this|\Cake\Datasource\ConnectionInterface
      */
     public function connection($connection = null)
     {
@@ -300,12 +298,14 @@ class Query implements ExpressionInterface, IteratorAggregate
      *
      * // Filters products in the same city
      * $query->distinct(['city']);
+     * $query->distinct('city');
      *
      * // Filter products with the same name
      * $query->distinct(['name'], true);
+     * $query->distinct('name', true);
      * ```
      *
-     * @param array|ExpressionInterface $on fields to be filtered on
+     * @param array|ExpressionInterface|string $on fields to be filtered on
      * @param bool $overwrite whether to reset fields with passed list or not
      * @return $this
      */
@@ -313,6 +313,8 @@ class Query implements ExpressionInterface, IteratorAggregate
     {
         if ($on === []) {
             $on = true;
+        } elseif (is_string($on)) {
+            $on = [$on];
         }
 
         if (is_array($on)) {
@@ -1692,7 +1694,7 @@ class Query implements ExpressionInterface, IteratorAggregate
      * Helper function used to build conditions by composing QueryExpression objects.
      *
      * @param string $part Name of the query part to append the new part to
-     * @param string|array|ExpressionInterface|callback $append Expression or builder function to append.
+     * @param string|null|array|ExpressionInterface|callback $append Expression or builder function to append.
      * @param string $conjunction type of conjunction to be used to operate part
      * @param array $types associative array of type names used to bind values to query
      * @return void

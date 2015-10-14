@@ -17,8 +17,8 @@ namespace Cake\View\Helper;
 use Cake\Collection\Collection;
 use Cake\Core\Configure;
 use Cake\Core\Exception\Exception;
+use Cake\Datasource\EntityInterface;
 use Cake\Form\Form;
-use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
@@ -29,7 +29,6 @@ use Cake\View\Form\EntityContext;
 use Cake\View\Form\FormContext;
 use Cake\View\Form\NullContext;
 use Cake\View\Helper;
-use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\StringTemplateTrait;
 use Cake\View\View;
 use Cake\View\Widget\WidgetRegistry;
@@ -105,8 +104,8 @@ class FormHelper extends Helper
             'formEnd' => '</form>',
             'formGroup' => '{{label}}{{input}}',
             'hiddenBlock' => '<div style="display:none;">{{content}}</div>',
-            'input' => '<input type="{{type}}" name="{{name}}"{{attrs}}>',
-            'inputSubmit' => '<input type="{{type}}"{{attrs}}>',
+            'input' => '<input type="{{type}}" name="{{name}}"{{attrs}}/>',
+            'inputSubmit' => '<input type="{{type}}"{{attrs}}/>',
             'inputContainer' => '<div class="input {{type}}{{required}}">{{content}}</div>',
             'inputContainerError' => '<div class="input {{type}}{{required}} error">{{content}}{{error}}</div>',
             'label' => '<label{{attrs}}>{{text}}</label>',
@@ -266,7 +265,7 @@ class FormHelper extends Helper
                     return new EntityContext($request, $data);
                 }
             }
-            if ($data['entity'] instanceof Entity) {
+            if ($data['entity'] instanceof EntityInterface) {
                 return new EntityContext($request, $data);
             }
             if (is_array($data['entity']) && empty($data['entity']['schema'])) {
@@ -1002,6 +1001,7 @@ class FormHelper extends Helper
             'required' => null,
             'options' => null,
             'templates' => [],
+            'templateVars' => []
         ];
         $options = $this->_parseOptions($fieldName, $options);
         $options += ['id' => $this->_domId($fieldName)];
@@ -1076,7 +1076,8 @@ class FormHelper extends Helper
         return $this->templater()->format($groupTemplate, [
             'input' => $options['input'],
             'label' => $options['label'],
-            'error' => $options['error']
+            'error' => $options['error'],
+            'templateVars' => isset($options['options']['templateVars']) ? $options['options']['templateVars'] : []
         ]);
     }
 
@@ -1097,7 +1098,8 @@ class FormHelper extends Helper
             'content' => $options['content'],
             'error' => $options['error'],
             'required' => $options['options']['required'] ? ' required' : '',
-            'type' => $options['options']['type']
+            'type' => $options['options']['type'],
+            'templateVars' => isset($options['options']['templateVars']) ? $options['options']['templateVars'] : []
         ]);
     }
 
@@ -1349,7 +1351,8 @@ class FormHelper extends Helper
      */
     protected function _inputLabel($fieldName, $label, $options)
     {
-        $labelAttributes = [];
+        $options += ['id' => null, 'input' => null, 'nestedInput' => false, 'templateVars' => []];
+        $labelAttributes = ['templateVars' => $options['templateVars']];
         if (is_array($label)) {
             $labelText = null;
             if (isset($label['text'])) {
@@ -1360,7 +1363,6 @@ class FormHelper extends Helper
         } else {
             $labelText = $label;
         }
-        $options += ['id' => null, 'input' => null, 'nestedInput' => false];
 
         $labelAttributes['for'] = $options['id'];
         $groupTypes = ['radio', 'multicheckbox', 'date', 'time', 'datetime'];
@@ -1449,7 +1451,6 @@ class FormHelper extends Helper
         $attributes['idPrefix'] = $this->_idPrefix;
         $attributes = $this->_initInputField($fieldName, $attributes);
 
-        $value = $attributes['val'];
         $hiddenField = isset($attributes['hiddenField']) ? $attributes['hiddenField'] : true;
         unset($attributes['hiddenField']);
 

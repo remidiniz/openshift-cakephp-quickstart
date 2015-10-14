@@ -9,6 +9,8 @@ This is a Database Migrations system for CakePHP 3.0.
 
 The plugin consists of a wrapper for the [phinx](http://phinx.org) migrations library.
 
+Full documentation of the plugin can be found on the [CakePHP Cookbook](http://book.cakephp.org/3.0/en/migrations.html).
+
 ## Installation
 
 You can install this plugin into your CakePHP application using
@@ -57,6 +59,10 @@ bin/cake migrations status -c my_datasource
 # The following will mark targeted migration as marked without actually running it.
 # The expected argument is the migration version number
 bin/cake migrations mark_migrated 20150417223600
+
+# Since Migrations 1.3.1, a new `all` special value for the version argumentwas added.
+# The following will mark all migrations found as migrated.
+bin/cake migrations mark_migrated all
 ```
 
 ### Creating Migrations

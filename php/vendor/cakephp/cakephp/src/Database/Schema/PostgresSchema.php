@@ -15,7 +15,6 @@
 namespace Cake\Database\Schema;
 
 use Cake\Database\Exception;
-use Cake\Database\Schema\Table;
 
 /**
  * Schema management/reflection features for Postgres.
@@ -84,6 +83,9 @@ class PostgresSchema extends BaseSchema
         }
         if (strpos($col, 'timestamp') !== false) {
             return ['type' => 'timestamp', 'length' => null];
+        }
+        if (strpos($col, 'time') !== false) {
+            return ['type' => 'time', 'length' => null];
         }
         if ($col === 'serial' || $col === 'integer') {
             return ['type' => 'integer', 'length' => 10];

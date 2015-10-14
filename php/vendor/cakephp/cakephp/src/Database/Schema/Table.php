@@ -14,9 +14,9 @@
  */
 namespace Cake\Database\Schema;
 
-use Cake\Database\Connection;
 use Cake\Database\Exception;
 use Cake\Database\Type;
+use Cake\Datasource\ConnectionInterface;
 
 /**
  * Represents a single table in a database schema.
@@ -433,17 +433,19 @@ class Table
         unset($attrs['references'], $attrs['update'], $attrs['delete']);
 
         if (!in_array($attrs['type'], static::$_validIndexTypes, true)) {
-            throw new Exception(sprintf('Invalid index type "%s"', $attrs['type']));
+            throw new Exception(sprintf('Invalid index type "%s" in index "%s" in table "%s".', $attrs['type'], $name, $this->_table));
         }
         if (empty($attrs['columns'])) {
-            throw new Exception('Indexes must have at least one column.');
+            throw new Exception(sprintf('Index "%s" in table "%s" must have at least one column.', $name, $this->_table));
         }
         $attrs['columns'] = (array)$attrs['columns'];
         foreach ($attrs['columns'] as $field) {
             if (empty($this->_columns[$field])) {
                 $msg = sprintf(
-                    'Columns used in indexes must be added to the Table schema first. ' .
+                    'Columns used in index "%s" in table "%s" must be added to the Table schema first. ' .
                     'The column "%s" was not found.',
+                    $name,
+                    $this->_table,
                     $field
                 );
                 throw new Exception($msg);
@@ -522,18 +524,19 @@ class Table
         $attrs = array_intersect_key($attrs, static::$_indexKeys);
         $attrs = $attrs + static::$_indexKeys;
         if (!in_array($attrs['type'], static::$_validConstraintTypes, true)) {
-            throw new Exception(sprintf('Invalid constraint type "%s"', $attrs['type']));
+            throw new Exception(sprintf('Invalid constraint type "%s" in table "%s".', $attrs['type'], $this->_table));
         }
         if (empty($attrs['columns'])) {
-            throw new Exception('Constraints must have at least one column.');
+            throw new Exception(sprintf('Constraints in table "%s" must have at least one column.', $this->_table));
         }
         $attrs['columns'] = (array)$attrs['columns'];
         foreach ($attrs['columns'] as $field) {
             if (empty($this->_columns[$field])) {
                 $msg = sprintf(
                     'Columns used in constraints must be added to the Table schema first. ' .
-                    'The column "%s" was not found.',
-                    $field
+                    'The column "%s" was not found in table "%s".',
+                    $field,
+                    $this->_table
                 );
                 throw new Exception($msg);
             }
@@ -661,11 +664,11 @@ class Table
      * Uses the connection to access the schema dialect
      * to generate platform specific SQL.
      *
-     * @param Connection $connection The connection to generate SQL for
+     * @param \Cake\Datasource\ConnectionInterface $connection The connection to generate SQL for
      * @return array List of SQL statements to create the table and the
      *    required indexes.
      */
-    public function createSql(Connection $connection)
+    public function createSql(ConnectionInterface $connection)
     {
         $dialect = $connection->driver()->schemaDialect();
         $columns = $constraints = $indexes = [];
@@ -687,10 +690,10 @@ class Table
      * Uses the connection to access the schema dialect to generate platform
      * specific SQL.
      *
-     * @param Connection $connection The connection to generate SQL for.
+     * @param \Cake\Datasource\ConnectionInterface $connection The connection to generate SQL for.
      * @return array SQL to drop a table.
      */
-    public function dropSql(Connection $connection)
+    public function dropSql(ConnectionInterface $connection)
     {
         $dialect = $connection->driver()->schemaDialect();
         return $dialect->dropTableSql($this);
@@ -699,10 +702,10 @@ class Table
     /**
      * Generate the SQL statements to truncate a table
      *
-     * @param Connection $connection The connection to generate SQL for.
-     * @return array SQL to drop a table.
+     * @param \Cake\Datasource\ConnectionInterface $connection The connection to generate SQL for.
+     * @return array SQL to truncate a table.
      */
-    public function truncateSql(Connection $connection)
+    public function truncateSql(ConnectionInterface $connection)
     {
         $dialect = $connection->driver()->schemaDialect();
         return $dialect->truncateTableSql($this);

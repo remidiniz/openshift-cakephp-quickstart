@@ -14,10 +14,8 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\Query;
-use Cake\Database\QueryCompiler;
-use Cake\Database\ValueBinder;
 use InvalidArgumentException;
+use PDO;
 
 /**
  * Represents a database diver containing all specificities for
@@ -251,11 +249,11 @@ abstract class Driver
         }
         if ((is_int($value) || $value === '0') || (
             is_numeric($value) && strpos($value, ',') === false &&
-            $value[0] != '0' && strpos($value, 'e') === false)
+            $value[0] !== '0' && strpos($value, 'e') === false)
         ) {
             return $value;
         }
-        return $this->_connection->quote($value, \PDO::PARAM_STR);
+        return $this->_connection->quote($value, PDO::PARAM_STR);
     }
 
     /**
