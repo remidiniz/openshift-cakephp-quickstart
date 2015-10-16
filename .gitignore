@@ -19,6 +19,6 @@ Temporary Items
 .idea_modules/
 
 
-/public/vendor/*
-/public/tmp/*
+#/public/vendor/*
+#/public/tmp/*
 /public/logs/*
